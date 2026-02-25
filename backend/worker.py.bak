@@ -1,0 +1,152 @@
+import asyncio
+import contextvars
+import os
+import shutil
+from pathlib import Path
+from typing import Dict, Any, List
+
+# Add src to python path to allow imports
+import sys
+sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(str(Path(__file__).parent.parent / "src"))
+
+from src.one_pager import OnePagerApplicant
+from src.workday_pager import WorkdayPager
+from src.action_agent import ApplicationActionAgent, QuestionElement, WebElement, QuestionResponse
+from src.async_action_agent import AsyncApplicationActionAgent
+
+# ContextVar to store the resume path for the current task context
+# This allows us to handle concurrent requests with different resumes
+current_resume_path = contextvars.ContextVar("current_resume_path", default=None)
+
+# Store original method to call it if context var is not set (backwards compatibility)
+_original_get_default_resume_path = ApplicationActionAgent._get_default_resume_path
+
+def patched_get_default_resume_path(self) -> str:
+    """
+    Patched version of _get_default_resume_path that checks the ContextVar first.
+    """
+    custom_path = current_resume_path.get()
+    if custom_path:
+        if os.path.exists(custom_path):
+            return custom_path
+        else:
+            print(f"Warning: Custom resume path {custom_path} does not exist. Falling back to default.")
+    
+    return _original_get_default_resume_path(self)
+
+# Apply the patch
+ApplicationActionAgent._get_default_resume_path = patched_get_default_resume_path
+AsyncApplicationActionAgent._get_default_resume_path = patched_get_default_resume_path
+
+class JobWorker:
+    def __init__(self, job_id: str, resume_path: str, urls: List[str]):
+        self.job_id = job_id
+        self.resume_path = resume_path
+        self.urls = urls
+        self.status = {}  # url -> status (pending, running, completed, failed)
+        self.logs = {}    # url -> execution logs
+        self.session_ids = {} # url -> browserbase session id
+        
+        for url in urls:
+            self.status[url] = "pending"
+            self.logs[url] = []
+
+    async def process_url(self, url: str):
+        self.status[url] = "running"
+        print(f"[{self.job_id}] processing {url}...")
+        
+        try:
+            # Set the context variable for this task
+            token = current_resume_path.set(self.resume_path)
+            
+            # Run the OnePagerApplicant in a thread to avoid blocking the event loop
+            # since Playwright sync API is used in OnePagerApplicant
+            def run_applicant():
+                # Capture stdout/stderr? ideally we'd want to capture logs
+                # Capture stdout/stderr? ideally we'd want to capture logs
+                # For now just run it.
+                if "myworkdayjobs.com" in url:
+                    print(f"[{self.job_id}] Detected Workday URL, using WorkdayPager")
+                    applicant = WorkdayPager(
+                        url=url,
+                        headless=True,
+                        production=True, # Enable Browserbase
+                        debug_menu=False
+                    )
+                    
+                    # WorkdayPager.run() is async, but we are inside a blocking thread via to_thread
+                    # This is tricky because asyncio.to_thread runs in a separate thread, but we need an event loop there
+                    # OR we can just run it directly if process_url allows.
+                    # Actually process_url IS async. So we can just await applicant.run() directly for WorkdayPager?
+                    # But then we need to handle the fact that OnePagerApplicant is sync.
+                    
+                    # Refactor plan:
+                    # If Workday -> await applicant.run()
+                    # If OnePager -> await asyncio.to_thread(applicant.run)
+                    
+                    # Wait, we are inside 'run_applicant' which is passed to asyncio.to_thread.
+                    # WorkdayPager being async means we can't run it inside this sync wrapper easily without a new loop.
+                    
+                    # Better approach: Move the dispatch OUTSIDE run_applicant wrapper.
+                    pass 
+                else:
+                    applicant = OnePagerApplicant(
+                        url=url,
+                        headless=True,  # Run headless for backend workers
+                        production=True, # Enable Browserbase
+                        slow_mode=False,
+                        debug_menu=False
+                    )
+                
+                    # Capture session ID if available (only in production mode)
+                    if hasattr(applicant, 'session') and applicant.session:
+                        self.session_ids[url] = applicant.session.id
+                        print(f"[{self.job_id}] Browserbase session created: {applicant.session.id}")
+                    
+                    applicant.run()
+            
+            # Using asyncio.to_thread to run the sync blocking code
+            # We need to restructure this to handle async WorkdayPager vs sync OnePagerApplicant
+            if "myworkdayjobs.com" in url:
+                 applicant = WorkdayPager(
+                    url=url,
+                    headless=True,
+                    production=True, 
+                    debug_menu=False
+                )
+                 # WorkdayPager sets self.session in __init__ just like OnePagerApplicant?
+                 # Checking WorkdayPager source: yes, uses self.bb.sessions.create
+                 if hasattr(applicant, 'session') and applicant.session:
+                     self.session_ids[url] = applicant.session.id
+                     print(f"[{self.job_id}] Browserbase session created: {applicant.session.id}")
+
+                 await applicant.run()
+            else:
+                 await asyncio.to_thread(run_applicant)
+            
+            self.status[url] = "completed"
+            
+        except Exception as e:
+            print(f"[{self.job_id}] Error processing {url}: {e}")
+            self.status[url] = "failed"
+            self.logs[url].append(str(e))
+        finally:
+            # Clean up context var (not strictly necessary as context is local to task)
+            # current_resume_path.reset(token) 
+            pass
+
+    async def run(self, semaphore: asyncio.Semaphore):
+        tasks = []
+        for url in self.urls:
+            # Create a wrapper coroutine that acquires the semaphore
+            async def protected_process(u=url):
+                async with semaphore:
+                    await self.process_url(u)
+            
+            tasks.append(asyncio.create_task(protected_process()))
+        
+        await asyncio.gather(*tasks)
+
+# Global job store (in-memory)
+jobs: Dict[str, JobWorker] = {}

@@ -1,0 +1,281 @@
+/* Import Google Font 'Outfit' */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-dark: #050505;
+  --bg-card: #0F0F0F;
+  --bg-input: #141414;
+  --border-color: #2A2A2A;
+  --accent-color: #FFFFFF;
+  --text-primary: #EDEDED;
+  --text-secondary: #888888;
+  --error-color: #FF4444;
+  --success-color: #44FF88;
+
+  --spacing-unit: 1rem;
+  --border-radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* Main Layout Centering */
+.main-layout {
+  width: 80%;
+  /* Modified to 80% per user request */
+  min-width: 600px;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Header Typography */
+.app-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #888888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Custom Card Styling */
+.aesthetic-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.aesthetic-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+}
+
+/* Custom Form Elements */
+.input-group {
+  margin-bottom: 30px;
+}
+
+.label-text {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* Custom File Upload Box */
+.file-upload-box {
+  border: 1px dashed var(--border-color);
+  background: var(--bg-input);
+  border-radius: var(--border-radius);
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.file-upload-box:hover {
+  border-color: var(--text-secondary);
+  background: #1A1A1A;
+}
+
+.file-upload-content {
+  text-align: center;
+  pointer-events: none;
+}
+
+.file-name-display {
+  background: #222;
+  padding: 10px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #333;
+}
+
+/* Custom Textarea */
+.custom-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  padding: 20px;
+  font-family: 'Outfit', monospace;
+  /* Keep monospace for URLs but match font family */
+  font-size: 0.9rem;
+  min-height: 150px;
+  resize: vertical;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.custom-textarea:focus {
+  border-color: #555;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+}
+
+/* Custom Button - Pure CSS */
+.btn-primary {
+  width: 100%;
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  padding: 18px;
+  border-radius: var(--border-radius);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-ghost:hover {
+  color: var(--text-primary);
+}
+
+/* Background Gradients */
+.ambient-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 50%, rgba(20, 20, 20, 1) 0%, transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(25, 25, 25, 1) 0%, transparent 25%);
+}
+
+/* Status Dashboard Styles */
+.dashboard-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.status-row:hover {
+  background: #1A1A1A;
+}
+
+.status-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tag-pending {
+  background: #222;
+  color: #666;
+}
+
+.tag-running {
+  background: rgba(60, 100, 255, 0.2);
+  color: #88AAFF;
+}
+
+.tag-completed {
+  background: rgba(50, 255, 100, 0.1);
+  color: #88FFaa;
+}
+
+.tag-failed {
+  background: rgba(255, 50, 50, 0.1);
+  color: #FF8888;
+}
