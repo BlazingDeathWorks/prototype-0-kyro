@@ -4,6 +4,8 @@ An intelligent, autonomous job application agent capable of navigating, understa
 
 ## Demo
 
+https://tempra-private-launch-1-frontend.vercel.app/
+
 https://github.com/user-attachments/assets/6b831670-2da6-4044-aa04-998dd95002b5
 
 https://github.com/user-attachments/assets/26937d97-8060-4ff4-b51d-a9efb556b5f2
