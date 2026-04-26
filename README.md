@@ -59,7 +59,7 @@ This project was the result of extensive R&D. We evaluated nearly every major to
 **LLMs & Inference:**
 *   **OpenAI (GPT-4o):** Used for complex reasoning and reasoning-heavy mappings.
 *   **Gemini (Pro/Flash):** Utilized for its massive context window and multimodal capabilities.
-*   **Claude (Sonnet 4.6 Opus):** Excellent for code generation and complex instruction following.
+*   **Claude (4.6 Opus):** Excellent for code generation and complex instruction following.
 *   **Deepseek:** Tested as a cost-effective high-performance alternative.
 *   **Groq:** Tested for ultra-low latency inference.
 
